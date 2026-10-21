@@ -89,6 +89,9 @@ NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
 CLERK_SECRET_KEY=
 # You have this id from the Clerk user dashboard, just select a user who will be the TEACHER and copy its ID
 NEXT_PUBLIC_TEACHER_ID=
+# Super admin(s): can open /admin/students to see all students and their purchases.
+# One Clerk user id, or several separated by commas.
+NEXT_PUBLIC_ADMIN_ID=
 
 # Database URL
 DATABASE_URL=

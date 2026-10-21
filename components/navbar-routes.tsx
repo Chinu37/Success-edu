@@ -9,12 +9,14 @@ import { Button } from "@/components/ui/button";
 import { dark } from '@clerk/themes';
 import { SearchInput } from '@/components/search-input';
 import { isTeacher } from '@/lib/teacher';
+import { isAdmin } from '@/lib/admin';
 
 export const NavbarRoutes = () => {
   const { userId } = useAuth()
   const pathname = usePathname();
 
   const isTeacherPage = pathname?.startsWith("/teacher");
+  const isAdminPage = pathname?.startsWith("/admin");
   const isCoursePage = pathname?.includes("/courses");
   const isSearchPage = pathname === "/search";
 
@@ -26,7 +28,7 @@ export const NavbarRoutes = () => {
         </div>
       )}
       <div className="flex gap-x-4 ml-auto items-center">
-        {isTeacherPage || isCoursePage ? (
+        {isTeacherPage || isAdminPage || isCoursePage ? (
           <Link href="/">
             <Button size="sm" variant="ghost" className=' hover:text-white hover:bg-rose-600 font-semibold transition-all'>
               <LogOut className="h-4 w-4 mr-2" />
@@ -34,14 +36,24 @@ export const NavbarRoutes = () => {
             </Button>
           </Link>
         )
-          : isTeacher(userId) ? (
-            <Link href="/teacher/courses">
-              <Button size="sm" variant="ghost">
-                Teacher mode
-              </Button>
-            </Link>
+          : (
+            <>
+              {isAdmin(userId) && (
+                <Link href="/admin/students">
+                  <Button size="sm" variant="ghost">
+                    Admin
+                  </Button>
+                </Link>
+              )}
+              {isTeacher(userId) && (
+                <Link href="/teacher/courses">
+                  <Button size="sm" variant="ghost">
+                    Teacher mode
+                  </Button>
+                </Link>
+              )}
+            </>
           )
-            : null
         }
         <UserButton
           afterSignOutUrl="/"
