@@ -9,7 +9,8 @@ const handleAuth = () => {
   const { userId } = auth();
   const isAuthorized = isTeacher(userId);
 
-  if (!userId && !isAuthorized) throw new Error('Unauthorized');
+  // Only teachers may upload (students are signed in too, so check both).
+  if (!userId || !isAuthorized) throw new Error('Unauthorized');
   return { userId };
 };
 

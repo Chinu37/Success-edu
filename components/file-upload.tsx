@@ -18,7 +18,8 @@ export const FileUpload = ({
     <UploadDropzone
       endpoint={endpoint}
       onClientUploadComplete={(res) => {
-        onChange(res?.[0].url);
+        // v7 serves files from ufs.sh (`ufsUrl`); `url` is the deprecated fallback.
+        onChange(res?.[0].ufsUrl ?? res?.[0].url);
       }}
       onUploadError={(error: Error) => {
         toast.error(`${error?.message}`);

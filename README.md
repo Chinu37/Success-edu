@@ -97,8 +97,8 @@ NEXT_PUBLIC_ADMIN_ID=
 DATABASE_URL=
 
 # Uploadthing
-UPLOADTHING_SECRET=
-UPLOADTHING_APP_ID=
+# Dashboard > your app > API Keys > "V7" tab
+UPLOADTHING_TOKEN=
 
 # Mux
 MUX_TOKEN_ID=
