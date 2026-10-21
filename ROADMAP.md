@@ -20,6 +20,9 @@ Assumptions (change any of these before Phase 1 starts):
 - Razorpay Subscriptions: monthly, quarterly, annual plans
 - 7-day free trial, plan limits, upgrade and cancel
 - Webhooks: charged, halted, cancelled (suspend school when unpaid)
+- Manual (cash) activation: super admin can activate or extend a creator's plan
+  without Razorpay, with amount, note and an audit log
+  (until then, the admin adds the creator's id to `NEXT_PUBLIC_TEACHER_ID`)
 
 ## Phase 3: Launch your course
 - Upload your first course into your school
