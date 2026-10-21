@@ -1,49 +1,52 @@
-import Stripe from 'stripe';
+import crypto from 'crypto';
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-import { stripe } from '@/lib/stripe';
 import { db } from '@/lib/db';
 
 export async function POST(req: Request) {
   const body = await req.text();
-  const signature = headers().get('Stripe-Signature') as string;
+  const signature = headers().get('x-razorpay-signature') ?? '';
 
-  let event: Stripe.Event;
+  const expected = crypto
+    .createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET!)
+    .update(body)
+    .digest('hex');
 
-  try {
-    event = stripe.webhooks.constructEvent(
-      body,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
-    );
-  } catch (error: any) {
-    return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 });
+  const valid =
+    signature.length === expected.length &&
+    crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+
+  if (!valid) {
+    return new NextResponse('Webhook Error: Invalid signature', { status: 400 });
   }
 
-  const session = event.data.object as Stripe.Checkout.Session;
-  const userId = session?.metadata?.userId;
-  const courseId = session?.metadata?.courseId;
+  const event = JSON.parse(body);
 
-  if (event.type === 'checkout.session.completed') {
-    if (!userId || !courseId) {
-      return new NextResponse(`Webhook Error: Missing metadata`, {
-        status: 400,
-      });
-    }
-
-    await db.purchase.create({
-      data: {
-        courseId: courseId,
-        userId: userId,
-      },
-    });
-  } else {
-    return new NextResponse(
-      `Webhook Error: Unhandled event type ${event.type}`,
-      { status: 200 }
-    );
+  if (event.event !== 'payment_link.paid') {
+    return new NextResponse(`Ignored event type ${event.event}`, { status: 200 });
   }
+
+  const link = event.payload?.payment_link?.entity;
+  const payment = event.payload?.payment?.entity;
+  const userId = link?.notes?.userId;
+  const courseId = link?.notes?.courseId;
+
+  if (!userId || !courseId) {
+    return new NextResponse('Webhook Error: Missing notes', { status: 400 });
+  }
+
+  // Razorpay may retry webhooks, so make this idempotent.
+  await db.purchase.upsert({
+    where: { userId_courseId: { userId, courseId } },
+    update: {},
+    create: {
+      userId,
+      courseId,
+      amount: payment?.amount ? payment.amount / 100 : null,
+      razorpayPaymentId: payment?.id ?? null,
+    },
+  });
 
   return new NextResponse(null, { status: 200 });
 }

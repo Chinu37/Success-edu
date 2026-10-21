@@ -51,8 +51,8 @@ Web application to manage and sell courses, offering a service similar to Udemy,
 - UploadThing (File storage).
 - MUX (Streaming video).
 - Prisma (ORM).
-- Railway (Deploy data base Postgre SQL).
-- Stripe (Manage payments)
+- MySQL database.
+- Razorpay (Manage payments, INR)
 
 <br/>
 
@@ -101,11 +101,15 @@ UPLOADTHING_APP_ID=
 MUX_TOKEN_ID=
 MUX_TOKEN_SECRET=
 
-# Stripe
-STRIPE_API_KEY=
-STRIPE_WEBHOOK_SECRET=
+# Razorpay (Dashboard > Settings > API Keys / Webhooks)
+RAZORPAY_KEY_ID=
+RAZORPAY_KEY_SECRET=
+RAZORPAY_WEBHOOK_SECRET=
 NEXT_PUBLIC_APP_URL=
 ```
+
+`NEXT_PUBLIC_TEACHER_ID` accepts several Clerk user ids separated by commas
+(e.g. `user_abc,user_def`). Every listed user can create and sell their own courses.
 
 <br/>
 
@@ -123,16 +127,20 @@ NEXT_PUBLIC_APP_URL=
 
 ### 6. Important to know ...
 
-If you are going to use Stripe, you should have already set up your account and project.
-And as we are in development mode you have to raise your local webhook, running this command:
+Payments use Razorpay Payment Links. In the Razorpay dashboard, add a webhook pointing to
+`https://<your-domain>/api/webhook`, subscribe to the **payment_link.paid** event, and paste
+the secret into `RAZORPAY_WEBHOOK_SECRET`.
+
+For local testing, expose your dev server with a tunnel (e.g. `ngrok http 3000`) and use that URL
+for both the webhook and `NEXT_PUBLIC_APP_URL`.
+
+The database is MySQL. After setting `DATABASE_URL`, create the tables with:
 
 ```bash
-  stripe listen --forward-to localhost:3000/api/webhook
+  npx prisma db push
 ```
 
-> It should be noted that you must have **stripe** installed to run that command!
-
-**If you do not do this step, when you want to make the purchase you will get an error.**
+**If the webhook is not set up, purchases will succeed in Razorpay but the course will not unlock.**
 
 <br/>
 
